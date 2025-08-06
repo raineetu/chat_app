@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const SignupPage = () => {
   const [form, setForm] = useState({
-    username: "",
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -16,10 +16,9 @@ const SignupPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     setForm({
-      username: "",
+      name: "",
       email: "",
       password: "",
-      confirmPassword: "",
     });
   };
 
@@ -33,8 +32,8 @@ const SignupPage = () => {
           </label>
           <input
             type="text"
-            name="username"
-            id="username"
+            name="name"
+            id="name"
             value={form.username}
             onChange={handleChange}
             className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
