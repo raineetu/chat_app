@@ -1,33 +1,9 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useChatState } from "../context/chatcontext";
 
 const ChatPage = () => {
-  const [chat, setChat] = useState(null);
-
-  const fetchChat = async () => {
-    try {
-      const { data } = await axios.get("/api/chat");
-      setChat(data);
-      console.log(data);
-    } catch (error) {
-      console.error("Error fetching chat:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchChat();
-  }, []);
-
-  if (!chat) {
-    return <div>Loading chat...</div>;
-  }
-
-  return (
-    <div>
-      <h2>Chat Details</h2>
-      <p>Name: {chat.message || "No name available"}</p>
-    </div>
-  );
+  const user = useChatState();
+  console.log(user, "sdfdsf");
+  return <div></div>;
 };
 
 export default ChatPage;
