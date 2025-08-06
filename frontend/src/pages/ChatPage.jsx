@@ -1,16 +1,33 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
 const ChatPage = () => {
-  const fetchChats = async () => {
-    const data = await axios.get("/api/chat");
-    console.log(data);
+  const [chat, setChat] = useState(null);
+
+  const fetchChat = async () => {
+    try {
+      const { data } = await axios.get("/api/chat");
+      setChat(data);
+      console.log(data);
+    } catch (error) {
+      console.error("Error fetching chat:", error);
+    }
   };
 
   useEffect(() => {
-    fetchChats();
+    fetchChat();
   }, []);
-  return <div>Chat page</div>;
+
+  if (!chat) {
+    return <div>Loading chat...</div>;
+  }
+
+  return (
+    <div>
+      <h2>Chat Details</h2>
+      <p>Name: {chat.message || "No name available"}</p>
+    </div>
+  );
 };
 
 export default ChatPage;
