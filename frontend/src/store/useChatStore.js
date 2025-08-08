@@ -41,8 +41,8 @@ export const useChatStore = create((set) => ({
   //         messageData
   //       );
   //       set({ messages: [...messages, res.data] });
-  //     } catch (error) {        
+  //     } catch (error) {
   //       alert.error(error.response.data.message);
   //     }
   //   },
-}));     
+}));
