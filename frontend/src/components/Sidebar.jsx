@@ -1,20 +1,7 @@
-import React, { useEffect } from "react";
-import { useChatStore } from "../store/useChatStore";
 import SidebarSkeleton from "./Skeleton/SidebarSkeleton";
 import { Users } from "lucide-react";
-import { useAuthStore } from "../store/useAuthStore";
 
 const Sidebar = () => {
-  const { getUsers, users, selectedUser, setSelectedUser, isUserLoading } =
-    useChatStore();
-
-  const { onlineUsers } = useAuthStore();
-  useEffect(() => {
-    getUsers();
-  }, [getUsers]);
-
-  if (isUserLoading) return <SidebarSkeleton />;
-
   const user = [
     { id: 1, name: "Neetu", state: "Online" },
     { id: 2, name: "Aarav", state: "Offline" },
@@ -50,14 +37,14 @@ const Sidebar = () => {
           {user.map((data) => (
             <div key={data.id + data.name}>
               <button
-                onClick={() => setSelectedUser(user)}
-                className="flex items-center gap-3 py-2 px-4 hover:bg-gray-800 w-full rounded-md my-2"
+                // onClick={() => setSelectedUser(user)}
+                className="flex items-center gap-3 py-2 px-4 hover:bg-gray-200 w-full rounded-md my-2"
               >
-                <div className="rounded-full bg-blue-400 text-white w-10 h-10 flex items-center justify-center uppercase font-bold">
+                <div className="rounded-full bg-blue-400  w-10 h-10 flex items-center justify-center uppercase font-bold">
                   {data.name[0]}
                 </div>
                 <div className="hidden lg:block">
-                  <p className="text-white font-medium">{data.name}</p>
+                  <p className=" font-medium">{data.name}</p>
                   <p
                     className={`text-xs font-bold ${
                       data.state === "Online"
