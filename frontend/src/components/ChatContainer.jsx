@@ -1,5 +1,7 @@
 import MessageInput from "./MessageInput";
 import ChatHeader from "./ChatHeader";
+import { MessageCircle } from "lucide-react";
+import NoChatSelected from "./NoChatSelected";
 
 const ChatContainer = ({ selectedUser }) => {
   console.log(selectedUser, "contsiner clicked");
@@ -24,7 +26,9 @@ const ChatContainer = ({ selectedUser }) => {
             </div>
           ))
         ) : (
-          <p className="text-gray-500">Please select a user to start chat.</p>
+          <p className="text-gray-500">
+            <NoChatSelected />
+          </p>
         )}
       </div>
       <MessageInput />

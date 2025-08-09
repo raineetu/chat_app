@@ -22,11 +22,11 @@ const Sidebar = ({ selectedUser }) => {
         </div>
       </div>
 
-      <div className="overflow-y-auto no-scrollbar w-full py-5 bg-base-300">
+      <div className="overflow-y-auto no-scrollbar h-screen w-full py-5 bg-base-300">
         {user.map((data) => (
           <div key={data.id + data.name}>
             <button
-              onClick={() => selectedUser(data)} // 👈 send selected user up
+              onClick={() => selectedUser(data)}
               className="flex items-center gap-3 py-2 px-4 hover:bg-gray-200 w-full rounded-md my-2"
             >
               <div className="rounded-full bg-blue-400 w-10 h-10 flex items-center justify-center uppercase font-bold">
