@@ -3,58 +3,53 @@ import MessageInput from "./MessageInput";
 import ChatHeader from "./ChatHeader";
 import NoChatSelected from "./NoChatSelected";
 
-const ChatContainer = ({ selectedUser }) => {
-  const [messages, setMessages] = useState({
-    Neetu: [
-      { text: "Hello, how can I help you?", sender: "them" },
-      { text: "Please provide details.", sender: "them" },
-    ],
-    Aarav: [
-      { text: "Hi Aarav!", sender: "me" },
-      { text: "We'll get back to you soon.", sender: "them" },
-    ],
-    Priya: [
-      { text: "Welcome, Priya!", sender: "me" },
-      { text: "Feel free to ask anything.", sender: "them" },
-    ],
-    Rohan: [
-      { text: "Hi Rohan!", sender: "me" },
-      { text: "How are you today?", sender: "them" },
-    ],
-  });
-
+const ChatContainer = ({ selectedUser, messages, onSend }) => {
   const [draftMessage, setDraftMessage] = useState("");
+  const [localMessages, setLocalMessages] = useState([]);
   const scrollRef = useRef(null);
 
-  const handleSend = (newMessage) => {
-    if (!selectedUser) return;
+  const filteredBackendMessages = messages.filter(
+    (msg) =>
+      selectedUser &&
+      (msg.sender_id === selectedUser.id || msg.receiver_id === selectedUser.id)
+  );
 
-    // Add your message (on the right)
-    setMessages((prev) => ({
-      ...prev,
-      [selectedUser.name]: [
-        ...(prev[selectedUser.name] || []),
-        { text: newMessage, sender: "me" },
-      ],
-    }));
+  const filteredLocalMessages = localMessages.filter(
+    (msg) =>
+      selectedUser &&
+      (msg.sender_id === selectedUser.id || msg.receiver_id === selectedUser.id)
+  );
+
+  const allMessages = [
+    ...filteredBackendMessages,
+    ...filteredLocalMessages,
+  ].sort((a, b) => a.id - b.id);
+
+  const currentUserId = 0;
+
+  const handleSend = (text) => {
+    console.log("handleSend called with:", text);
+
+    if (!selectedUser || text.trim() === "") return;
+
+    const newMessage = {
+      id: Date.now(),
+      sender_id: currentUserId,
+      receiver_id: selectedUser.id,
+      message: text,
+    };
+
+    onSend(newMessage);
+
+    setLocalMessages((prev) => [...prev, newMessage]);
     setDraftMessage("");
-
-    // Simulate friend reply after 1s
-    setTimeout(() => {
-      setMessages((prev) => ({
-        ...prev,
-        [selectedUser.name]: [
-          ...(prev[selectedUser.name] || []),
-          { text: "Got it! I'll reply shortly.", sender: "them" },
-        ],
-      }));
-    }, 1000);
   };
 
   useEffect(() => {
-    if (scrollRef.current)
+    if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [selectedUser?.name, messages]);
+    }
+  }, [selectedUser?.id, messages, localMessages]);
 
   return (
     <div className="flex-1 flex flex-col overflow-auto">
@@ -63,20 +58,28 @@ const ChatContainer = ({ selectedUser }) => {
       <div ref={scrollRef} className="flex-1 p-4 space-y-2 overflow-y-auto">
         {selectedUser ? (
           <>
-            {messages[selectedUser.name]?.map((msg, index) => (
-              <div
-                key={index}
-                className={`p-3 rounded-lg max-w-xs text-sm ${
-                  msg.sender === "me"
-                    ? "bg-blue-500 text-white ml-auto"
-                    : "bg-base-300 text-black"
-                }`}
-              >
-                {msg.text}
+            {allMessages.length === 0 ? (
+              <div className="text-center text-gray-500 mt-10">
+                No messages yet
               </div>
-            ))}
+            ) : (
+              allMessages.map((msg) => {
+                const isMe = msg.sender_id === currentUserId;
+                return (
+                  <div
+                    key={msg.id}
+                    className={`p-3 rounded-lg max-w-xs text-sm ${
+                      isMe
+                        ? "bg-blue-500 text-white ml-auto"
+                        : "bg-base-300 text-black mr-auto"
+                    }`}
+                  >
+                    {msg.message}
+                  </div>
+                );
+              })
+            )}
 
-            {/* Live typing preview */}
             {draftMessage && (
               <div className="bg-blue-100 p-3 rounded-lg max-w-xs text-sm italic text-gray-600 ml-auto">
                 {draftMessage}
@@ -90,7 +93,6 @@ const ChatContainer = ({ selectedUser }) => {
         )}
       </div>
 
-      {/* Message input */}
       <MessageInput
         onSend={handleSend}
         onTyping={setDraftMessage}

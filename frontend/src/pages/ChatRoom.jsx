@@ -1,127 +1,125 @@
-// import { useEffect, useState, useRef } from "react";
-// import ChatContainer from "../components/ChatContainer";
-// import Sidebar from "../components/Sidebar";
-
-// export default function ChatRoom() {
-//   // Connection Form State
-//   const [roomName, setRoomName] = useState("");
-//   const [userType, setUserType] = useState("student");
-//   const [userId, setUserId] = useState("");
-//   const [connected, setConnected] = useState(false);
-
-//   // Chat State
-//   const [messages, setMessages] = useState([]);
-//   const [draft, setDraft] = useState("");
-//   const socketRef = useRef(null);
-//   const messagesEndRef = useRef(null);
-
-//   // Handle "Connect"
-//   const connect = () => {
-//     if (!roomName.trim() || !userId.trim()) return;
-
-//     const url = `ws://192.168.1.13:8100/ws/chat/${roomName}/?userType=${userType}&userId=${userId}`;
-//     socketRef.current = new WebSocket(url);
-
-//     socketRef.current.onopen = () => setConnected(true);
-
-//     socketRef.current.onmessage = ({ data }) => {
-//       setMessages((msgs) => [...msgs, JSON.parse(data)]);
-//     };
-
-//     socketRef.current.onclose = () => setConnected(false);
-//   };
-
-//   // Send a Message
-//   const sendMessage = () => {
-//     if (!draft.trim() || !connected) return;
-//     socketRef.current.send(JSON.stringify({ message: draft }));
-//     setDraft("");
-//   };
-
-//   // Auto-scroll to latest message
-//   useEffect(() => {
-//     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-//   }, [messages]);
-
-//   // Cleanup on Unmount
-//   useEffect(() => () => socketRef.current?.close(), []);
-
-//   // Render Connect Form
-//   if (!connected) {
-//     return (
-//       <div className="max-w-md mx-auto mt-8 p-4 bg-white shadow rounded-lg">
-//         <h2 className="text-2xl font-semibold mb-4">Connect to Chat</h2>
-
-//         <label className="block mb-2">
-//           <span className="text-sm font-medium text-gray-700">Room Name</span>
-//           <input
-//             type="text"
-//             value={roomName}
-//             onChange={(e) => setRoomName(e.target.value)}
-//             className="mt-1 text-black block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded focus:outline-none focus:ring focus:border-blue-300"
-//           />
-//         </label>
-
-//         <label className="block mb-2">
-//           <span className="text-sm font-medium text-gray-700">User Type</span>
-//           <select
-//             value={userType}
-//             onChange={(e) => setUserType(e.target.value)}
-//             className="mt-1 block text-black w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded focus:outline-none focus:ring focus:border-blue-300"
-//           >
-//             <option value="student">Student</option>
-//             <option value="admin">Admin</option>
-//           </select>
-//         </label>
-
-//         <label className="block mb-4">
-//           <span className="text-sm font-medium text-gray-700">User ID</span>
-//           <input
-//             type="number"
-//             value={userId}
-//             onChange={(e) => setUserId(e.target.value)}
-//             className="mt-1 text-black block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded focus:outline-none focus:ring focus:border-blue-300"
-//           />
-//         </label>
-
-//         <button
-//           onClick={connect}
-//           disabled={!roomName || !userId}
-//           className="w-full py-2 px-4 bg-blue-600  font-semibold rounded hover:bg-blue-700 disabled:opacity-50"
-//         >
-//           Connect
-//         </button>
-//       </div>
-//     );
-//   }
-
-//   // Render Chat UI
-//   return (
-//     <div className="h-screen bg-base-200">
-//       <div className="flex h-full rounded-lg overflow-hidden">
-//         <Sidebar />
-
-//         <ChatContainer />
-//       </div>
-//     </div>
-//   );
-// }
-
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ChatContainer from "../components/ChatContainer";
 import Sidebar from "../components/Sidebar";
+import axios from "axios";
 
 const ChatRoom = () => {
   const [selectedUser, setSelectedUser] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [users, setUsers] = useState([]);
+
+  const socketRef = useRef(null);
+
+  // Fetch all users for sidebar
+  const fetchUsers = async () => {
+    const res = await axios.get(
+      "http://Shikhars-MacBook-Pro.local:8100/chat/students/"
+    );
+    setUsers(res.data);
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    if (socketRef.current) {
+      socketRef.current.close();
+    }
+
+    if (!selectedUser) {
+      setMessages([]);
+      return;
+    }
+
+    const roomName = selectedUser.general_room;
+    const userType = selectedUser.userType || "student";
+    const userId = selectedUser.userId || selectedUser.id;
+    console.log("Connecting to room:", roomName);
+    console.log("type:", userType);
+    console.log("id", userId);
+
+    // WebSocket URL
+    const wsUrl = `ws://Shikhars-MacBook-Pro.local:8100/ws/chat/${roomName}/?userType=${userType}&userId=${userId}`;
+    console.log("WebSocket URL:", wsUrl);
+
+    // Open WebSocket connection
+    socketRef.current = new WebSocket(wsUrl);
+
+    socketRef.current.onopen = () => {
+      console.log("WebSocket connected to", roomName);
+    };
+
+    socketRef.current.onmessage = (event) => {
+      console.log("WebSocket message received:", event.data);
+      const newMessage = JSON.parse(event.data);
+      setMessages((prev) => [...prev, newMessage]);
+
+      setUsers((prevUsers) => {
+        if (prevUsers.find((u) => u.id === newMessage.sender_id))
+          return prevUsers;
+        return [
+          ...prevUsers,
+          {
+            id: newMessage.sender_id,
+            name: newMessage.sender_type + " " + newMessage.sender_id,
+          },
+        ];
+      });
+    };
+
+    socketRef.current.onclose = () => {
+      console.log("WebSocket disconnected from", roomName);
+    };
+
+    socketRef.current.onerror = (err) => {
+      console.error("WebSocket error:", err);
+    };
+
+    // Fetch messages history for this room
+    const fetchMessages = async () => {
+      try {
+        const res = await axios.get(
+          `http://Shikhars-MacBook-Pro.local:8100/chat/messages/${roomName}/`
+        );
+        setMessages(res.data);
+        console.log(`Messages fetched for room ${roomName}:`, res.data);
+      } catch (error) {
+        console.error("Failed to fetch messages:", error);
+        setMessages([]);
+      }
+    };
+
+    fetchMessages();
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
+    };
+  }, [selectedUser]);
+
+  const sendMessage = (messageObj) => {
+    console.log("Sending message:", messageObj);
+
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify(messageObj));
+    }
+  };
 
   return (
     <div className="h-screen bg-base-200">
       <div className="flex h-full rounded-lg overflow-hidden">
-        {/* Pass the function to Sidebar to update selectedUser */}
-        <Sidebar selectedUser={setSelectedUser} />
-
-        {/* Pass the actual selected user to ChatContainer */}
-        <ChatContainer selectedUser={selectedUser} />
+        <Sidebar
+          users={users}
+          onSelectUser={setSelectedUser}
+          selectedUser={selectedUser}
+        />
+        <ChatContainer
+          selectedUser={selectedUser}
+          messages={messages}
+          onSend={sendMessage}
+        />
       </div>
     </div>
   );
